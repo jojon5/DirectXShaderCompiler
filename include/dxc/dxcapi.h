@@ -519,6 +519,18 @@ IDxcCompiler3 : public IUnknown {
   DECLARE_CROSS_PLATFORM_UUIDOF(IDxcCompiler3)
 };
 
+struct __declspec(uuid("9c4bb7ea-25a9-11eb-adc1-0242ac120002"))
+IDxcCompiler4 : public IDxcCompiler3 {
+
+  // Disassemble a program.
+  virtual HRESULT STDMETHODCALLTYPE Decompile(
+    _In_ const DxcBuffer *pObject,                // Program to disassemble: dxil container or bitcode.
+    _In_ REFIID riid, _Out_ LPVOID *ppResult      // IDxcResult: status, disassembly text, and errors
+    ) = 0;
+
+  DECLARE_CROSS_PLATFORM_UUIDOF(IDxcCompiler4)
+};
+
 static const UINT32 DxcValidatorFlags_Default = 0;
 static const UINT32 DxcValidatorFlags_InPlaceEdit = 1;  // Validator is allowed to update shader blob in-place.
 static const UINT32 DxcValidatorFlags_RootSignatureOnly = 2;
