@@ -1986,6 +1986,10 @@ HRESULT Decompile(IDxcBlob *pProgram, raw_string_ostream &Stream) {
      EmitMetaData(dxilModule, Stream);
      EmitEntrySig(dxilModule, Stream);
      EmitEntryBody(dxilModule, Stream);
+
+     DxcAssemblyAnnotationWriter w;
+     pModule->print(Stream, &w);
+     Stream.flush();
   }
   } catch (std::exception& e) {
   
