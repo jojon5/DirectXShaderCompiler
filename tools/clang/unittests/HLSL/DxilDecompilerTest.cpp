@@ -401,8 +401,13 @@ bool DecompilerTest::InitSupport() {
 }
 
 TEST_F(DecompilerTest, CompileWhenDefinesThenApplied) { 
+<<<<<<< HEAD
   // CodeGenTest(L"cs1ac132b695bff3a4"); // surfelGridClearCs
   // CodeGenTest(L"cs2b69ce61d4fb649b"); // surfelGridBinCs
    CodeGenTest(L"cs8ccd38e8959c5bdc"); //
   
+=======
+  CodeGenTest(L"cs1ac132b695bff3a4"); // surfelGridClearCs
+  // CodeGenTest(L"cs2b69ce61d4fb649b"); // surfelGridBinCs
+>>>>>>> f100cda58fdb1804c161673ed6b557fc69a6929d
 }
