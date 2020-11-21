@@ -69,6 +69,7 @@ HRESULT ValidateRootSignatureInContainer(
 void GetValidatorVersion(unsigned *pMajor, unsigned *pMinor);
 void AssembleToContainer(AssembleInputs &inputs);
 HRESULT Disassemble(IDxcBlob *pProgram, llvm::raw_string_ostream &Stream);
+HRESULT Decompile(IDxcBlob *pProgram, llvm::raw_string_ostream &Stream);
 void ReadOptsAndValidate(hlsl::options::MainArgs &mainArgs,
                          hlsl::options::DxcOpts &opts,
                          hlsl::AbstractMemoryStream *pOutputStream,

@@ -49,6 +49,7 @@ add_clang_library(clang-hlsl-tests SHARED
   ValidationTest.cpp
   VerifierTest.cpp
   clang-hlsl-tests.rc
+  DxilDecompilerTest.cpp
   )
 else (WIN32)
 set(HLSL_IGNORE_SOURCES
@@ -61,6 +62,7 @@ set(HLSL_IGNORE_SOURCES
   DxilContainerTest.cpp
   ValidationTest.cpp
   CompilerTest.cpp
+  DxilDecompilerTest.cpp
   )
 
 add_clang_unittest(clang-hlsl-tests

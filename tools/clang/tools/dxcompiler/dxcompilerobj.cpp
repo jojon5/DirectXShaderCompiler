@@ -413,7 +413,7 @@ static void CreateDefineStrings(
   }
 }
 
-class DxcCompiler : public IDxcCompiler3,
+class DxcCompiler : public IDxcCompiler4,
                     public IDxcLangExtensions2,
                     public IDxcContainerEvent,
 #ifdef SUPPORT_QUERY_GIT_COMMIT_INFO
@@ -448,7 +448,7 @@ public:
 
   HRESULT STDMETHODCALLTYPE QueryInterface(REFIID iid, void **ppvObject) override {
     HRESULT hr = DoBasicQueryInterface<
-      IDxcCompiler3,
+      IDxcCompiler4,
       IDxcLangExtensions,
       IDxcLangExtensions2,
       IDxcContainerEvent,
@@ -461,6 +461,74 @@ public:
     if (FAILED(hr)) {
       return DoBasicQueryInterface<IDxcCompiler, IDxcCompiler2>(&m_DxcCompilerAdapter, iid, ppvObject);
     }
+    return hr;
+  }
+
+    // Compile a single entry point to the target shader model with debug
+  // information.
+  HRESULT STDMETHODCALLTYPE Decompile(
+      _In_ const DxcBuffer
+          *pObject, // Program to disassemble: dxil container or bitcode.
+      _In_ REFIID riid,
+      _Out_ LPVOID *ppResult // IDxcResult: status, disassembly text, and errors
+      ) override {
+  
+ if (pObject == nullptr || ppResult == nullptr)
+      return E_INVALIDARG;
+    if (!(IsEqualIID(riid, __uuidof(IDxcResult)) ||
+          IsEqualIID(riid, __uuidof(IDxcOperationResult))))
+      return E_INVALIDARG;
+
+    *ppResult = nullptr;
+    CComPtr<IDxcResult> pResult;
+
+    HRESULT hr = S_OK;
+    DxcEtw_DXCompilerDisassemble_Start();
+    DxcThreadMalloc TM(m_pMalloc);
+    try {
+      DefaultFPEnvScope fpEnvScope;
+
+      ::llvm::sys::fs::MSFileSystem *msfPtr;
+      IFT(CreateMSFileSystemForDisk(&msfPtr));
+      std::unique_ptr<::llvm::sys::fs::MSFileSystem> msf(msfPtr);
+
+      ::llvm::sys::fs::AutoPerThreadSystem pts(msf.get());
+      IFTLLVM(pts.error_code());
+
+      std::string StreamStr;
+      raw_string_ostream Stream(StreamStr);
+
+      CComPtr<IDxcBlobEncoding> pProgram;
+      IFT(hlsl::DxcCreateBlob(pObject->Ptr, pObject->Size, true, false, false,
+                              0, nullptr, &pProgram))
+      IFC(dxcutil::Decompile(pProgram, Stream));
+
+      IFT(DxcResult::Create(S_OK, DXC_OUT_HLSL,
+                            {DxcOutputObject::StringOutput(
+                                DXC_OUT_HLSL, CP_UTF8, StreamStr.c_str(),
+                                StreamStr.size(), DxcOutNoName)},
+                            &pResult));
+      IFT(pResult->QueryInterface(riid, ppResult));
+
+      return S_OK;
+    } catch (std::bad_alloc &) {
+      hr = E_OUTOFMEMORY;
+    } catch (hlsl::Exception &e) {
+      _Analysis_assume_(DXC_FAILED(e.hr));
+      hr = e.hr;
+      if (SUCCEEDED(
+              DxcResult::Create(e.hr, DXC_OUT_NONE,
+                                {DxcOutputObject::ErrorOutput(
+                                    CP_UTF8, e.msg.c_str(), e.msg.size())},
+                                &pResult)) &&
+          SUCCEEDED(pResult->QueryInterface(riid, ppResult))) {
+        hr = S_OK;
+      }
+    } catch (...) {
+      hr = E_FAIL;
+    }
+  Cleanup:
+    DxcEtw_DXCompilerDisassemble_Stop(hr);
     return hr;
   }
 
